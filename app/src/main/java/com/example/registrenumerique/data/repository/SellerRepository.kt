@@ -5,13 +5,21 @@ import com.example.registrenumerique.data.remote.supabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import io.github.jan.supabase.realtime.selectAsFlow
+import io.github.jan.supabase.annotations.SupabaseExperimental
 import java.util.UUID
 
 class SellerRepository {
 
     suspend fun getAllSellers(): List<Seller> = withContext(Dispatchers.IO) {
         supabaseClient.from("sellers").select().decodeList<Seller>()
+    }
+
+    @OptIn(SupabaseExperimental::class)
+    fun getSellersFlow(): Flow<List<Seller>> {
+        return supabaseClient.from("sellers").selectAsFlow(primaryKey = Seller::id)
     }
 
     suspend fun insertSeller(seller: Seller) = withContext(Dispatchers.IO) {

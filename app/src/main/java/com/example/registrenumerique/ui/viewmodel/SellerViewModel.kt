@@ -13,16 +13,20 @@ import kotlinx.coroutines.launch
 
 class SellerViewModel(private val repository: SellerRepository = SellerRepository()) : ViewModel() {
 
-    private val _sellers = MutableStateFlow<List<Seller>>(emptyList())
-    val sellers: StateFlow<List<Seller>> = _sellers
-
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    val filteredSellers: StateFlow<List<Seller>> = combine(_sellers, _searchQuery) { sellers, query ->
+    val sellers: StateFlow<List<Seller>> = repository.getSellersFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val filteredSellers: StateFlow<List<Seller>> = combine(sellers, _searchQuery) { sellers, query ->
         if (query.isBlank()) {
             sellers
         } else {
@@ -32,23 +36,6 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    init {
-        fetchSellers()
-    }
-
-    fun fetchSellers() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                _sellers.value = repository.getAllSellers()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
@@ -64,7 +51,6 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
                     finalSeller = seller.copy(image_url = imageUrl)
                 }
                 repository.insertSeller(finalSeller)
-                fetchSellers()
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -83,7 +69,6 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
                     finalSeller = seller.copy(image_url = imageUrl)
                 }
                 repository.updateSeller(id, finalSeller)
-                fetchSellers()
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -97,7 +82,6 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
             _isLoading.value = true
             try {
                 repository.deleteSeller(id)
-                fetchSellers()
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
