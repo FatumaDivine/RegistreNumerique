@@ -58,6 +58,7 @@ dependencies {
 
     // Ktor
     implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.core)
 
     // Serialization

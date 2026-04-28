@@ -1,0 +1,70 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build APK Debug",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["assembleDebug"],
+      "problemMatcher": ["$gradle"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Install & Run on Device",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["installDebug"],
+      "dependsOn": ["Build APK Debug"],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run App (requires connected device/emulator)",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["installDebug"],
+      "isBackground": false,
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Clean Build",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["clean"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Build and Launch Emulator",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        ".\\.\\gradlew.bat assembleDebug; Write-Host 'Build terminé! Connectez un émulateur ou un device en USB, puis relancez cette tâche.'"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}

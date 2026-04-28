@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.registrenumerique.data.model.Seller
 import com.example.registrenumerique.data.repository.SellerRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -18,6 +21,12 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _errorMessage = MutableSharedFlow<String>()
+    val errorMessage: SharedFlow<String> = _errorMessage.asSharedFlow()
+
+    private val _saveSuccess = MutableSharedFlow<Boolean>()
+    val saveSuccess: SharedFlow<Boolean> = _saveSuccess.asSharedFlow()
 
     val sellers: StateFlow<List<Seller>> = repository.getSellersFlow()
         .stateIn(
@@ -51,8 +60,10 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
                     finalSeller = seller.copy(image_url = imageUrl)
                 }
                 repository.insertSeller(finalSeller)
+                _saveSuccess.emit(true)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _errorMessage.emit(e.localizedMessage ?: "Erreur lors de l'ajout")
             } finally {
                 _isLoading.value = false
             }
@@ -69,8 +80,10 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
                     finalSeller = seller.copy(image_url = imageUrl)
                 }
                 repository.updateSeller(id, finalSeller)
+                _saveSuccess.emit(true)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _errorMessage.emit(e.localizedMessage ?: "Erreur lors de la modification")
             } finally {
                 _isLoading.value = false
             }
@@ -82,8 +95,10 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
             _isLoading.value = true
             try {
                 repository.deleteSeller(id)
+                _saveSuccess.emit(true)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _errorMessage.emit(e.localizedMessage ?: "Erreur lors de la suppression")
             } finally {
                 _isLoading.value = false
             }
