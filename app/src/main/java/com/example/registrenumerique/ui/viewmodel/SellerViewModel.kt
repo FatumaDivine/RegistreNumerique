@@ -19,6 +19,9 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
+    private val _selectedCategory = MutableStateFlow("Tous")
+    val selectedCategory: StateFlow<String> = _selectedCategory
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -35,19 +38,24 @@ class SellerViewModel(private val repository: SellerRepository = SellerRepositor
             initialValue = emptyList()
         )
 
-    val filteredSellers: StateFlow<List<Seller>> = combine(sellers, _searchQuery) { sellers, query ->
-        if (query.isBlank()) {
-            sellers
-        } else {
-            sellers.filter {
-                it.name.contains(query, ignoreCase = true) || 
-                it.table_number.contains(query, ignoreCase = true)
-            }
+    val filteredSellers: StateFlow<List<Seller>> = combine(sellers, _searchQuery, _selectedCategory) { sellers, query, category ->
+        sellers.filter { seller ->
+            val matchesQuery = query.isBlank() || 
+                seller.name.contains(query, ignoreCase = true) || 
+                seller.table_number.contains(query, ignoreCase = true)
+            
+            val matchesCategory = category == "Tous" || seller.category == category
+            
+            matchesQuery && matchesCategory
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
+    }
+
+    fun onCategorySelect(category: String) {
+        _selectedCategory.value = category
     }
 
     fun addSeller(seller: Seller, imageByteArray: ByteArray? = null, fileName: String? = null) {
